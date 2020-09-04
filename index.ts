@@ -2,6 +2,8 @@
 /// <reference path="Solver.ts"/>
 let maze: Maze;
 let solver: Solver;
+let mazeSize = 100;
+let mazeComplexity = 100;
 
 const startSpeed = document.createElement("button");
 startSpeed.innerText = "Start Speed";
@@ -14,33 +16,40 @@ document.body.appendChild(startWatch);
 const editSize = document.createElement("input");
 editSize.title = "Size";
 editSize.type = "number";
-editSize.value = "25";
+editSize.value = mazeSize.toString();
 document.body.appendChild(editSize);
+editSize.addEventListener("change", (ev) => {
+  mazeSize = Number((<HTMLInputElement>ev.target).value);
+});
 
 const editComplexity = document.createElement("input");
 editComplexity.title = "Complexity";
 editComplexity.type = "number";
-editComplexity.value = "50";
+editComplexity.value = mazeComplexity.toString();
 document.body.appendChild(editComplexity);
+editComplexity.addEventListener("change", (ev) => {
+  mazeComplexity = Number((<HTMLInputElement>ev.target).value);
+});
 
 const newMaze = document.createElement("button");
 newMaze.innerText = "New Maze";
 document.body.appendChild(newMaze);
 
 startSpeed.addEventListener("click", () => {
-  console.time("Solved in");
   solver = new Solver(maze);
-  console.timeEnd("Solved in");
+  console.time("Solved in");
+  solver.solve().finally(() => console.timeEnd("Solved in"));
 });
 
 startWatch.addEventListener("click", () => {
-  solver = new Solver(maze, 25);
+  solver = new Solver(maze, 10);
+  solver.solve();
 });
 
 newMaze.addEventListener("click", () => {
   maze.destroy();
   console.clear();
-  maze = new Maze(Number(editSize.value), Number(editComplexity.value));
+  maze = new Maze(mazeSize, mazeComplexity);
 });
 
-maze = new Maze();
+maze = new Maze(mazeSize, mazeComplexity);
