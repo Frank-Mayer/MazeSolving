@@ -12,6 +12,7 @@ class Solver {
   takenPaths: SortedList<string>; // Storage of which paths have already been taken
   deadEnds: SortedList<string>; // Storage of discovered dead ends
   solved: boolean; // End found?
+  leftFirst: boolean;
   constructor(m: Maze, delay: number = 0) {
     if (~delay) {
       this.delay = delay;
@@ -26,6 +27,15 @@ class Solver {
     this.possibleDeadEndReturns = new Array<Vector2D>();
     this.takenPaths = new SortedList<string>();
     this.deadEnds = new SortedList<string>();
+    this.leftFirst = false;
+    for (let i = 0; i < this.maze.size - 1; i++) {
+      if (this.maze.data[this.maze.size - 1][i]) {
+        if (i < this.maze.size / 2) {
+          this.leftFirst = true;
+        }
+        break;
+      }
+    }
   }
 
   async solve() {
@@ -88,12 +98,21 @@ class Solver {
 
   async findWalkablePaths(): Promise<Array<Vector2D>> {
     let r = new Array<Vector2D>();
-    let options = [
-      new Vector2D(0, 1),
-      new Vector2D(-1, 0),
-      new Vector2D(1, 0),
-      new Vector2D(0, -1),
-    ];
+    let options: Array<Vector2D>;
+    if (this.leftFirst)
+      options = [
+        new Vector2D(0, 1),
+        new Vector2D(-1, 0),
+        new Vector2D(1, 0),
+        new Vector2D(0, -1),
+      ];
+    else
+      options = [
+        new Vector2D(0, 1),
+        new Vector2D(1, 0),
+        new Vector2D(-1, 0),
+        new Vector2D(0, -1),
+      ];
     for await (const i of options) {
       let j = this.pos.add(i);
       if (this.maze.posIsInMaze(j) && this.maze.data[j.y][j.x]) {
