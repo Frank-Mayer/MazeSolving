@@ -51,7 +51,7 @@ class Maze {
     let i: number;
     let finished = false;
     for (i = 0; i < this.size * complexity; i++) {
-      if (~counter && this.posIsInMaze(pos.add(adder))) {
+      if (counter > 0 && this.posIsInMaze(pos.add(adder))) {
         pos = pos.add(adder);
         counter--;
         this.data[pos.y][pos.x] = true;

@@ -14,7 +14,8 @@ class Solver {
   solved: boolean; // End found?
   leftFirst: boolean;
   constructor(m: Maze, delay: number = 0) {
-    if (~delay) {
+    if (delay > 0) {
+      // wenn kein Delay deniniert dann
       this.delay = delay;
     }
     this.solved = false;
@@ -52,7 +53,7 @@ class Solver {
         } else if (this.delay) {
           await sleep(this.delay);
         }
-      } else if (~this.possibleDeadEnds.length) {
+      } else if (this.possibleDeadEnds.length > 0) {
         let newDeadEnd = <Vector2D>this.possibleDeadEnds.pop();
         this.deadEnds.add(newDeadEnd.toString());
         this.pos = <Vector2D>this.possibleDeadEndReturns.pop();
@@ -146,7 +147,7 @@ class Solver {
             break;
           }
         }
-        if (~testIndex) {
+        if (testIndex >= 0) {
           console.count("optimization");
           this.path.splice(currentIndex + 1, testIndex - currentIndex - 1);
         }
