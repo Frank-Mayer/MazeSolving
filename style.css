@@ -10,3 +10,16 @@ canvas {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
+
+button,
+input {
+  background-color: whitesmoke;
+  color: black;
+  display: inline-block;
+  font-size: 18px;
+  font-family: sans-serif;
+}
+
+input {
+  width: 50px;
+}
