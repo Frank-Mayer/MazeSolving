@@ -95,7 +95,7 @@ class Maze {
 
     // Draw maze
     this.ctx.beginPath();
-    this.ctx.fillStyle = "white";
+    this.ctx.fillStyle = "#7f7f7f";
     for (let y = 0; y < this.size; y++) {
       for (let x = 0; x < this.size; x++) {
         if (this.data[y][x]) {
@@ -109,7 +109,7 @@ class Maze {
     // Draw path
     if (this.path) {
       this.ctx.beginPath();
-      this.ctx.fillStyle = "blue";
+      this.ctx.fillStyle = "whitesmoke";
       for await (let el of this.path) {
         this.ctx.rect(el.x, el.y, 1, 1);
       }
@@ -120,7 +120,7 @@ class Maze {
     // Mark current possition
     if (pos) {
       this.ctx.beginPath();
-      this.ctx.fillStyle = "green";
+      this.ctx.fillStyle = "#54D158";
       this.ctx.rect(pos.x, pos.y, 1, 1);
       this.ctx.fill();
       this.ctx.closePath();

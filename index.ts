@@ -36,18 +36,20 @@ newMaze.innerText = "New Maze";
 document.body.appendChild(newMaze);
 
 startSpeed.addEventListener("click", () => {
+  console.clear();
   solver = new Solver(maze);
   console.time("Solved in");
   solver.solve().finally(() => console.timeEnd("Solved in"));
 });
 
 startWatch.addEventListener("click", () => {
+  console.clear();
   solver = new Solver(maze, 10);
   solver.solve();
 });
 
 newMaze.addEventListener("click", () => {
-  maze.destroy();
+  if (maze) maze.destroy();
   console.clear();
   maze = new Maze(mazeSize, mazeComplexity);
 });
