@@ -11,4 +11,7 @@ class Vector2D {
   copy() {
     return new Vector2D(this.x, this.y);
   }
+  toString() {
+    return `${this.x};${this.y}`;
+  }
 }

@@ -40,10 +40,10 @@ class Solver {
         } else if (this.delay) {
           await sleep(this.delay);
         }
+        this.deadEnds.add(newDeadEnd.toString());
       } else {
         if (this.possibleDeadEnds.length > 0) {
           let newDeadEnd = <Vector2D>this.possibleDeadEnds.pop();
-          this.deadEnds.add(`${newDeadEnd.x};${newDeadEnd.y}`);
           this.pos = <Vector2D>this.possibleDeadEndReturns.pop();
           let newPosIndex = this.path.indexOf(this.pos) + 1;
           this.path.splice(newPosIndex, this.path.length - newPosIndex);
@@ -67,7 +67,7 @@ class Solver {
       isCrossing = true;
     }
     for (let path of options) {
-      let pathStr = `${path.x};${path.y}`;
+      let pathStr = path.toString();
       if (this.doiWantToWalkHere(pathStr)) {
         if (isCrossing) {
           this.possibleDeadEnds.push(path);
