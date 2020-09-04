@@ -5,6 +5,7 @@
 }
 
 canvas {
+  margin: 10px;
   image-rendering: -moz-crisp-edges;
   image-rendering: -webkit-crisp-edges;
   image-rendering: pixelated;
