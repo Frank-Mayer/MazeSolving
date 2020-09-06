@@ -5,7 +5,7 @@ class Maze {
   size: number;
   data: Array<Array<boolean>>;
   start: Vector2D;
-  path: Array<Vector2D> | undefined;
+  path: Array<Array<Vector2D>> | undefined;
   constructor(size: number = 10, complexity: number = 50) {
     if (size < 25) {
       size = 25;
@@ -89,7 +89,7 @@ class Maze {
       return new Vector2D(0, 1);
     }
   }
-  async drawToCanvas(pos: Vector2D | undefined = undefined) {
+  async drawToCanvas(pos: Array<Vector2D> | undefined = undefined) {
     // Clear Canvas
     this.ctx.clearRect(0, 0, this.size, this.size);
 
@@ -110,9 +110,10 @@ class Maze {
     if (this.path) {
       this.ctx.beginPath();
       this.ctx.fillStyle = "whitesmoke";
-      for await (let el of this.path) {
-        this.ctx.rect(el.x, el.y, 1, 1);
-      }
+      for await (const path of this.path)
+        for await (let el of path) {
+          this.ctx.rect(el.x, el.y, 1, 1);
+        }
       this.ctx.fill();
       this.ctx.closePath();
     }
@@ -121,7 +122,9 @@ class Maze {
     if (pos) {
       this.ctx.beginPath();
       this.ctx.fillStyle = "#54D158";
-      this.ctx.rect(pos.x, pos.y, 1, 1);
+      for await (const el of pos) {
+        this.ctx.rect(el.x, el.y, 1, 1);
+      }
       this.ctx.fill();
       this.ctx.closePath();
     }

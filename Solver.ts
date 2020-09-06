@@ -4,13 +4,10 @@
 class Solver {
   maze: Maze; // Reference to Maze object
   delay: number | undefined;
-  pos: Vector2D; // Current Possition
-  path: Array<Vector2D>; // Path to be drawn on the canvas
-  crossings: Array<Vector2D>; // Locations of the passed crossings
-  possibleDeadEnds: Array<Vector2D>; // Taken path after a crossing
-  possibleDeadEndReturns: Array<Vector2D>; // Taken path after a crossing
+  pos: Array<Vector2D>; // Current Possition
+  path: Array<Array<Vector2D>>; // Path to be drawn on the canvas
   takenPaths: SortedList<string>; // Storage of which paths have already been taken
-  deadEnds: SortedList<string>; // Storage of discovered dead ends
+  // deadEnds: SortedList<string>; // Storage of discovered dead ends
   solved: boolean; // End found?
   leftFirst: boolean;
   constructor(m: Maze, delay: number = 0) {
@@ -20,14 +17,11 @@ class Solver {
     }
     this.solved = false;
     this.maze = m;
-    this.pos = this.maze.start;
-    this.path = new Array<Vector2D>(this.pos);
+    this.pos = [this.maze.start];
+    this.path = [[this.maze.start]];
     this.maze.path = this.path;
-    this.crossings = new Array<Vector2D>();
-    this.possibleDeadEnds = new Array<Vector2D>();
-    this.possibleDeadEndReturns = new Array<Vector2D>();
     this.takenPaths = new SortedList<string>();
-    this.deadEnds = new SortedList<string>();
+    // this.deadEnds = new SortedList<string>();
     this.leftFirst = false;
     for (let i = 0; i < this.maze.size - 1; i++) {
       if (this.maze.data[this.maze.size - 1][i]) {
@@ -40,64 +34,65 @@ class Solver {
   }
 
   async solve() {
-    let step;
+    this.takenPaths = new SortedList<string>();
+    this.takenPaths.add(this.pos.toString());
     let finishLine = this.maze.size - 1;
-    for (step = 0; step < 500000; step++) {
-      if (await this.step()) {
-        if (this.delay) {
-          this.maze.drawToCanvas(this.pos);
+    for (let step = 0; step < Number.MAX_SAFE_INTEGER && !this.solved; step++) {
+      for (
+        let solverIndex = 0;
+        solverIndex < this.pos.length && !this.solved;
+        solverIndex++
+      ) {
+        if (await this.step(solverIndex)) {
+          if (this.pos[solverIndex].y === finishLine) {
+            this.setSolved(solverIndex, step);
+            break;
+          }
+        } else {
+          this.path.splice(solverIndex, 1);
+          this.pos.splice(solverIndex, 1);
         }
-        if (this.pos.y === finishLine) {
-          this.solved = true;
-          break;
-        } else if (this.delay) {
-          await sleep(this.delay);
-        }
-      } else if (this.possibleDeadEnds.length > 0) {
-        let newDeadEnd = <Vector2D>this.possibleDeadEnds.pop();
-        this.deadEnds.add(newDeadEnd.toString());
-        this.pos = <Vector2D>this.possibleDeadEndReturns.pop();
-        let newPosIndex = this.path.indexOf(this.pos) + 1;
-        this.path.splice(newPosIndex, this.path.length - newPosIndex);
-      } else {
-        throw new Error("Maze not solveable");
+      }
+      if (this.delay) {
+        this.maze.drawToCanvas(this.pos);
+        await sleep(this.delay);
       }
     }
-    if (this.solved) {
-      this.shorten();
-      console.log(`Took ${step} steps`);
-      console.log(`Final path length: ${this.path.length}`);
-    } else {
-      throw new Error(`Not solved after ${step} steps`);
+    if (!this.solved) {
+      throw new Error(`Not solved`);
     }
-    await sleep(25);
-    this.maze.drawToCanvas();
   }
 
-  async step(): Promise<boolean> {
-    const options = await this.findWalkablePaths();
+  async step(solverIndex: number): Promise<boolean> {
+    const options = await this.findWalkablePaths(solverIndex);
+    let hasPath = false;
     let isCrossing = false;
     if (options.length > 1) {
-      this.crossings.push(this.pos);
       isCrossing = true;
     }
+    let pathSaver = this.path[solverIndex];
     for (const path of options) {
       let pathStr = path.toString();
-      if (this.doiWantToWalkHere(pathStr)) {
+      if (this.doIWantToGoHere(pathStr)) {
         if (isCrossing) {
-          this.possibleDeadEnds.push(path);
-          this.possibleDeadEndReturns.push(this.pos);
+          if (!hasPath) {
+            this.path.splice(solverIndex, 1);
+            this.pos.splice(solverIndex, 1);
+          }
+          this.pos.push(path);
+          this.path.push(pathSaver.concat(path));
+        } else {
+          this.path[solverIndex].push(path);
+          this.pos[solverIndex] = path;
+          return true;
         }
-        this.takenPaths.add(pathStr);
-        this.path.push(path);
-        this.pos = path;
-        return true;
+        hasPath = true;
       }
     }
-    return false;
+    return hasPath;
   }
 
-  async findWalkablePaths(): Promise<Array<Vector2D>> {
+  async findWalkablePaths(solverIndex: number): Promise<Array<Vector2D>> {
     let r = new Array<Vector2D>();
     let options: Array<Vector2D>;
     if (this.leftFirst)
@@ -115,7 +110,7 @@ class Solver {
         new Vector2D(0, -1),
       ];
     for await (const i of options) {
-      let j = this.pos.add(i);
+      let j = this.pos[solverIndex].add(i);
       if (this.maze.posIsInMaze(j) && this.maze.data[j.y][j.x]) {
         r.push(j);
       }
@@ -123,36 +118,47 @@ class Solver {
     return r;
   }
 
-  doiWantToWalkHere(pathStr: string): boolean {
-    return !(
-      this.takenPaths.includes(pathStr) || this.deadEnds.includes(pathStr)
-    );
+  doIWantToGoHere(pathStr: string): boolean {
+    let r = !this.takenPaths.includes(pathStr);
+    this.takenPaths.add(pathStr);
+    return r;
   }
 
-  shorten() {
-    for (this.pos of this.path) {
-      let currentIndex = this.path.indexOf(this.pos);
-      const options = [
-        new Vector2D(1, 0),
-        new Vector2D(-1, 0),
-        new Vector2D(0, 1),
-        new Vector2D(0, -1),
-      ];
-      for (const testPath of options) {
-        let testIndex = -1;
-        for (let i = this.path.length - 1; i > currentIndex + 1; i--) {
-          const testVector = this.path[i].add(testPath);
-          if (testVector.x === this.pos.x && testVector.y === this.pos.y) {
-            testIndex = i;
-            break;
-          }
-        }
-        if (testIndex >= 0) {
-          console.count("optimization");
-          this.path.splice(currentIndex + 1, testIndex - currentIndex - 1);
-        }
-      }
-    }
+  // shorten(solverIndex: number) {
+  //   for (this.pos of this.path) {
+  //     let currentIndex = this.path.indexOf(this.pos);
+  //     const options = [
+  //       new Vector2D(1, 0),
+  //       new Vector2D(-1, 0),
+  //       new Vector2D(0, 1),
+  //       new Vector2D(0, -1),
+  //     ];
+  //     for (const testPath of options) {
+  //       let testIndex = -1;
+  //       for (let i = this.path.length - 1; i > currentIndex + 1; i--) {
+  //         const testVector = this.path[i].add(testPath);
+  //         if (testVector.x === this.pos.x && testVector.y === this.pos.y) {
+  //           testIndex = i;
+  //           break;
+  //         }
+  //       }
+  //       if (testIndex >= 0) {
+  //         console.count("optimization");
+  //         this.path.splice(currentIndex + 1, testIndex - currentIndex - 1);
+  //       }
+  //     }
+  //   }
+  //   this.maze.drawToCanvas();
+  // }
+  setSolved(solverIndex: number, steps: number) {
+    this.solved = true;
+    // this.shorten(solverIndex);
+    console.log(`Solved by tree ${solverIndex}`);
+    console.log(`Took ${steps} steps`);
+    console.log(`Final path length: ${this.path[solverIndex].length}`);
+    this.path.splice(0, solverIndex);
+    this.path.splice(solverIndex + 1, this.path.length - solverIndex - 1);
     this.maze.drawToCanvas();
+    // console.table(this.path[solverIndex]);
   }
 }

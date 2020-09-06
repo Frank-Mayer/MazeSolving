@@ -36,22 +36,32 @@ newMaze.innerText = "New Maze";
 document.body.appendChild(newMaze);
 
 startSpeed.addEventListener("click", () => {
+  newMaze.disabled = true;
   console.clear();
   solver = new Solver(maze);
   console.time("Solved in");
-  solver.solve().finally(() => console.timeEnd("Solved in"));
+  solver.solve().finally(() => {
+    console.timeEnd("Solved in");
+    newMaze.disabled = false;
+  });
 });
 
 startWatch.addEventListener("click", () => {
+  newMaze.disabled = true;
   console.clear();
   solver = new Solver(maze, 10);
-  solver.solve();
+  solver.solve().finally(() => {
+    newMaze.disabled = false;
+  });
 });
 
 newMaze.addEventListener("click", () => {
-  if (maze) maze.destroy();
-  console.clear();
-  maze = new Maze(mazeSize, mazeComplexity);
+  if (!newMaze.disabled) {
+    if (maze) maze.destroy();
+    console.clear();
+    maze = new Maze(mazeSize, mazeComplexity);
+  }
+  console.debug(newMaze.disabled);
 });
 
 maze = new Maze(mazeSize, mazeComplexity);
