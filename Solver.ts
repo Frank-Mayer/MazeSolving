@@ -74,6 +74,9 @@ class Solver {
     for (const path of options) {
       let pathStr = path.toString();
       if (this.doIWantToGoHere(pathStr)) {
+        if (path.y >= this.maze.size - 1) {
+          this.setSolved(solverIndex, -1);
+        }
         if (isCrossing) {
           if (!hasPath) {
             this.path.splice(solverIndex, 1);
@@ -120,7 +123,7 @@ class Solver {
 
   doIWantToGoHere(pathStr: string): boolean {
     let r = !this.takenPaths.includes(pathStr);
-    this.takenPaths.add(pathStr);
+    if (r) this.takenPaths.add(pathStr);
     return r;
   }
 
@@ -151,14 +154,18 @@ class Solver {
   //   this.maze.drawToCanvas();
   // }
   setSolved(solverIndex: number, steps: number) {
-    this.solved = true;
-    // this.shorten(solverIndex);
-    console.log(`Solved by tree ${solverIndex}`);
-    console.log(`Took ${steps} steps`);
-    console.log(`Final path length: ${this.path[solverIndex].length}`);
-    this.path.splice(0, solverIndex);
-    this.path.splice(solverIndex + 1, this.path.length - solverIndex - 1);
-    this.maze.drawToCanvas();
-    // console.table(this.path[solverIndex]);
+    if (!this.solved) {
+      this.solved = true;
+      // this.shorten(solverIndex);
+      console.log(`Solved by tree ${solverIndex}`);
+      if (steps > 0) {
+        console.log(`Took ${steps} steps`);
+      }
+      console.log(`Final path length: ${this.path[solverIndex].length}`);
+      this.path.splice(0, solverIndex);
+      this.path.splice(solverIndex + 1, this.path.length - solverIndex - 1);
+      this.maze.drawToCanvas();
+      // console.table(this.path[solverIndex]);
+    }
   }
 }
