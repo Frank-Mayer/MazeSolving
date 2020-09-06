@@ -61,7 +61,6 @@ newMaze.addEventListener("click", () => {
     console.clear();
     maze = new Maze(mazeSize, mazeComplexity);
   }
-  console.debug(newMaze.disabled);
 });
 
 maze = new Maze(mazeSize, mazeComplexity);
