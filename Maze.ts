@@ -5,7 +5,8 @@ class Maze {
   size: number;
   data: Array<Array<boolean>>;
   start: Vector2D;
-  path: Array<Array<Vector2D>> | undefined;
+  path: Array<Array<Vector2D>> | undefined; // From solver
+
   constructor(size: number = 10, complexity: number = 50) {
     if (size < 25) {
       size = 25;
@@ -17,28 +18,40 @@ class Maze {
     }
     this.canvas = document.createElement("canvas");
     this.size = size;
-    this.start = new Vector2D(Math.floor(this.size / 2), 0);
-    let canvasSize = Math.abs(
-      Math.min(window.innerHeight, window.innerWidth) - 50
-    );
-    this.canvas.style.height = `${canvasSize}px`;
+    this.start = new Vector2D(Math.floor(this.size / 2), 0); // Start is in the middle at the top
+    let canvasSize = Math.max(
+      Math.min(window.innerHeight, window.innerWidth) - 50,
+      200
+    ); // Canvas takes up most of the screen
+    this.canvas.style.height = `${canvasSize}px`; // Set style to actual size
     this.canvas.style.width = `${canvasSize}px`;
     document.body.appendChild(this.canvas);
     this.ctx = <CanvasRenderingContext2D>this.canvas.getContext("2d");
-    this.data = new Array<Array<boolean>>(this.size);
+    this.data = new Array<Array<boolean>>(this.size); // Empty array
     this.createMaze(this.size, complexity);
   }
+
   destroy() {
     this.canvas.remove();
-    this.data = new Array();
+    for (let property in this) {
+      if (this.hasOwnProperty(property)) {
+        delete this[property];
+      }
+    }
+    console.debug(this);
   }
+
+  /** Randomly generate maze
+   * @param size Size of maze in pixels (x and y)
+   * @param complexity Maximum lines to create the maze (is going to be multiplied by size)
+   */
   createMaze(size: number, complexity: number) {
     this.size = size;
     this.start = new Vector2D(Math.floor(this.size / 2), 0);
-    this.canvas.height = this.size;
+    this.canvas.height = this.size; // Set render size to maze size
     this.canvas.width = this.size;
     for (let y = 0; y < size; y++) {
-      let tempArray = new Array<boolean>();
+      const tempArray = new Array<boolean>();
       for (let x = 0; x < size; x++) {
         tempArray[x] = false;
       }
@@ -47,7 +60,7 @@ class Maze {
     let pos = this.start.copy();
     this.data[pos.y][pos.x] = true;
     let adder = new Vector2D();
-    let counter: number = 0;
+    let counter = 0;
     let i: number;
     let finished = false;
     for (i = 0; i < this.size * complexity; i++) {
@@ -57,9 +70,11 @@ class Maze {
         this.data[pos.y][pos.x] = true;
       } else {
         adder = this.getRandomPosAround(pos);
-        counter = Math.round(Math.random() * 10);
+        counter = Math.floor(Math.random() * 10) + 1; // Length of the corridor, 1 to 10
       }
       if (pos.y >= this.size - 1) {
+        // Exit is bottom of the maze
+        // Only one exit
         finished = true;
         break;
       }
@@ -69,14 +84,19 @@ class Maze {
       while (pos.y < this.size - 1) {
         this.data[pos.y][pos.x] = true;
         pos.y++;
+        i++;
       }
     }
     console.log(`Complexity: ${i}`);
-    this.drawToCanvas();
+    this.drawToCanvas(); // Draw finished maze
   }
+
+  /** Check if vector is valid maze location */
   posIsInMaze(pos: Vector2D) {
     return pos.x >= 0 && pos.y >= 0 && pos.x < this.size && pos.y < this.size;
   }
+
+  /** Random position around a given vector that is inside the maze */
   getRandomPosAround(pos: Vector2D): Vector2D {
     let r = Math.round(Math.random() * 3);
     if (r === 0 && pos.y > 1) {
@@ -89,7 +109,12 @@ class Maze {
       return new Vector2D(0, 1);
     }
   }
-  async drawToCanvas(pos: Array<Vector2D> | undefined = undefined) {
+
+  /** Clear canvas and draw maze, paths and path follower positions */
+  async drawToCanvas(
+    pos: Array<Vector2D> | undefined = undefined,
+    solved = false
+  ) {
     // Clear Canvas
     this.ctx.clearRect(0, 0, this.size, this.size);
 
@@ -109,7 +134,7 @@ class Maze {
     // Draw path
     if (this.path) {
       this.ctx.beginPath();
-      this.ctx.fillStyle = "whitesmoke";
+      this.ctx.fillStyle = solved ? "#54D158" : "whitesmoke";
       for await (const path of this.path)
         for await (let el of path) {
           this.ctx.rect(el.x, el.y, 1, 1);
