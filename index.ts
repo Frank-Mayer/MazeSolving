@@ -17,18 +17,11 @@ const editSize = document.createElement("input");
 editSize.title = "Size";
 editSize.type = "number";
 editSize.value = mazeSize.toString();
+editSize.min = "5";
+editSize.max = "500";
 document.body.appendChild(editSize);
 editSize.addEventListener("change", (ev) => {
   mazeSize = Number((<HTMLInputElement>ev.target).value);
-});
-
-const editComplexity = document.createElement("input");
-editComplexity.title = "Complexity";
-editComplexity.type = "number";
-editComplexity.value = mazeComplexity.toString();
-document.body.appendChild(editComplexity);
-editComplexity.addEventListener("change", (ev) => {
-  mazeComplexity = Number((<HTMLInputElement>ev.target).value);
 });
 
 const newMaze = document.createElement("button");
@@ -49,18 +42,20 @@ startSpeed.addEventListener("click", () => {
 startWatch.addEventListener("click", () => {
   newMaze.disabled = true;
   console.clear();
-  solver = new Solver(maze, 10);
+  solver = new Solver(maze, 15);
   solver.solve().finally(() => {
     newMaze.disabled = false;
   });
 });
 
 newMaze.addEventListener("click", () => {
-  if (!newMaze.disabled) {
+  if (newMaze.disabled) {
+    alert("Please wait until the solver has finished");
+  } else {
     if (maze) maze.destroy();
     console.clear();
-    maze = new Maze(mazeSize, mazeComplexity);
+    maze = new Maze(mazeSize);
   }
 });
 
-maze = new Maze(mazeSize, mazeComplexity);
+maze = new Maze(mazeSize);
