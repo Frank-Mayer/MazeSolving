@@ -1,3 +1,4 @@
 # GitIgnore
 *.js
 .DS_Store
+test.ts
