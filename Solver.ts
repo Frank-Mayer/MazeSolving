@@ -4,9 +4,9 @@
 class Solver {
   maze: Maze; // Reference to Maze object
   delay: number | undefined;
-  pos: Array<Vector2D>; // Current Possition
-  path: Array<Array<Vector2D>>; // Path to be drawn on the canvas
-  takenPaths: SortedList<string>; // Storage of which paths have already been taken
+  pos: LinkedList<Vector2D>; // Current Possition
+  path: LinkedList<LinkedList<Vector2D>>; // Path to be drawn on the canvas
+  takenPaths: LinkedList<string>; // Storage of which paths have already been taken
   solved: boolean; // End found?
   leftFirst: boolean;
   finishLine: number;
@@ -21,8 +21,8 @@ class Solver {
     this.finishLine = this.maze.size - 1;
     this.pos = [this.maze.start]; // Create first path follower
     this.path = [[this.maze.start]]; // Add start to first path
-    this.maze.path = this.path; // Give a reference to path array to the maze, to draw
-    this.takenPaths = new SortedList<string>();
+    this.maze.path = this.path; // Give a reference to path LinkedList to the maze, to draw
+    this.takenPaths = new LinkedList<string>();
     this.leftFirst = false;
     for (let i = 0; i < this.maze.size - 1; i++) {
       if (this.maze.data[this.maze.size - 1][i]) {
@@ -45,10 +45,10 @@ class Solver {
   }
 
   async solve() {
-    if (this.takenPaths.length > 0) {
-      this.takenPaths = new SortedList<string>();
+    if (!this.takenPaths.isEmpty()) {
+      this.takenPaths = new LinkedList<string>();
     }
-    this.takenPaths.add(this.pos.toString());
+    this.takenPaths.append(this.pos.toString());
     for (let step = 0; step < Number.MAX_SAFE_INTEGER && !this.solved; step++) {
       for (
         let solverIndex = 0;
@@ -69,7 +69,7 @@ class Solver {
       }
       if (this.delay && !this.solved) {
         this.maze.drawToCanvas(this.pos);
-        await sleep(this.delay);
+        await delay(this.delay);
       }
     }
     if (!this.solved) {
@@ -111,9 +111,9 @@ class Solver {
     return hasPath;
   }
 
-  async findWalkablePaths(solverIndex: number): Promise<Array<Vector2D>> {
-    let r = new Array<Vector2D>();
-    let options: Array<Vector2D>;
+  async findWalkablePaths(solverIndex: number): Promise<LinkedList<Vector2D>> {
+    let r = new LinkedList<Vector2D>();
+    let options: LinkedList<Vector2D>;
     if (this.leftFirst) {
       options = [
         new Vector2D(0, 1),
@@ -140,7 +140,7 @@ class Solver {
 
   doIWantToGoHere(pathStr: string): boolean {
     let notIncluded = !this.takenPaths.includes(pathStr);
-    if (notIncluded) this.takenPaths.add(pathStr);
+    if (notIncluded) this.takenPaths.append(pathStr);
     return notIncluded;
   }
 
@@ -185,7 +185,6 @@ class Solver {
       // Only keep solver path
       this.path.splice(1, this.path.length - solverIndex - 1);
       this.path.splice(0, solverIndex);
-      console.log(`Solved by tree ${solverIndex}`);
       if (steps > 0) {
         console.log(`Took ${steps} steps`);
       }

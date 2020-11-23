@@ -11,11 +11,6 @@ class Maze {
     if (size < 25) {
       size = 25;
     }
-    if (complexity <= 50) {
-      complexity = 500;
-    } else {
-      complexity = complexity * 10;
-    }
     this.canvas = document.createElement("canvas");
     this.size = size;
     this.start = new Vector2D(Math.floor(this.size / 2), 0); // Start is in the middle at the top
