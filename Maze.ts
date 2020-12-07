@@ -33,7 +33,6 @@ class Maze {
         delete this[property];
       }
     }
-    console.debug(this);
   }
 
   /** Randomly generate maze
@@ -45,7 +44,7 @@ class Maze {
     this.start = new Vector2D(Math.floor(this.size / 2), 0);
     this.canvas.height = this.size; // Set render size to maze size
     this.canvas.width = this.size;
-    for (let y = 0; y < size; y++) {
+    for (let y = 0; y < size && y < Number.MAX_SAFE_INTEGER; y++) {
       const tempArray = new Array<boolean>();
       for (let x = 0; x < size; x++) {
         tempArray[x] = false;
@@ -82,7 +81,7 @@ class Maze {
         i++;
       }
     }
-    console.log(`Complexity: ${i}`);
+    console.log(`Generated ${i} nodes`);
     this.drawToCanvas(); // Draw finished maze
   }
 
